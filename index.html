@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title> 
+</head>
+<body>
+    <embed src="ран.mp3" width="70" height="45"  hidden="True" autostart="True" loop="True"></embed>
+    <script type="text/javascript" src= "pointjs_0.2.0.9.js"></script>
+    <script type="text/javascript">
+    //создание экземпляра движка
+    var pjs = new PointJS('2d', 800, 400); // размер экрана - 800x400
+    pjs.system.initFullPage(); //растянуть на весь экран
+
+    
+    //Объявим нужные нам для работы ссылки
+    var game = pjs.game; //менеджер игры
+    var point = pjs.vector.point;//конструктор точки
+
+    //Получим новые размеры сцены
+    var height = game.getWH().h; // высота 
+    var width = game.getWH().w; // ширина
+
+    // создаем изображения для фона
+    var fon1 = game.newImageObject ({ //создание картинки
+        x : 0, y : 0, //начальная позиция в нулях (это левый верхний угол)
+        file : 'fon.jpg', //путь к самой картинке
+        h : height, //высоту заднего фона равна высоте сцены
+        onload : function () { // эта функция выполнится, когда изображение загрузится
+            fon2.x = fon1.x + fon1.w; // и станет доступна новая ширина
+        }
+    });
+
+    var fon2 = game.newImageObject ({
+        x : 0, y : 0,
+        file : 'fon.jpg',
+        h : height
+    });
+
+    var gr1 = game.newImageObject({
+    x : 0, y : 0,
+    file : 'fon1.png',
+    w : width,
+    onload : function () {
+    gr2.y = gr1.y = height - gr1.h; // установим позицию по Y в низ сцены
+    gr2.x = gr1.x + gr1.w; // тот же принцип позиционирования, что и для фона
+ }
+});
+
+var gr2 = game.newImageObject({
+ x : 0, y : 0,
+ file : 'fon1.png',
+ w : width
+});
+
+    var gr2 = game.newImageObject ({
+        x : 0, y : 0,
+        file : 'fon1.png',
+        w : width
+    });
+
+    var dog = game.newAnimationObject({ // создаем анимационный объект
+    x : width / 4, y : 0, // позиция по X будет одна четвертая ширины сцены
+    h : 120, w : 150, // размеры «собачки» указываем явные
+    delay : 4, // задержка (в FPS) при воспроизведении анимации
+    animation : pjs.tiles.newAnimation('dog.png', 150, 120, 5) // тут получаем из файла спрайта анимацию и возвращаем её как свойство объекту «dog»
+});
+
+var moveBackGround = function (s) { // аргумент s — это скорость движения фона
+
+// движение с эффектом «параллакс»
+fon1.move(point(-s / 2, 0)); // двигаем первую картинку с половиной скорости
+fon2.move(point(-s / 2, 0)); // двигаем вторую
+
+gr1.move(point(-s, 0)); // «землю» же двигаем на полной скорости
+gr2.move(point(-s, 0)); // и эту тоже
+
+// теперь проверим, не ушел ли объект фона «за кадр»
+if (fon1.x + fon1.w < 0) { // если ушел
+ fon1.x = fon2.x+fon2.w; // перемещаем его сразу за вторым
+}
+
+// аналогично для второго
+if (fon2.x + fon2.w < 0) {
+ fon2.x = fon1.x+fon1.w; // позиционируем за первым
+}
+
+// для земли все в точности так же
+if (gr1.x + gr1.w < 0) {
+ gr1.x = gr2.x+gr2.w;
+}
+
+if (gr2.x + gr2.w < 0) {
+ gr2.x = gr1.x+gr1.w;
+}
+};
+
+// создание нового игрового цикла
+game.newLoop('dog_game', function () {
+ game.clear(); // очистим все, что было отрисовано в предыдущем кадре
+
+ fon1.draw(); // рисуем первый фон
+ fon2.draw(); // рисуем второй фон
+ gr1.draw(); // рисуем первую землю
+ gr2.draw(); // рисуем вторую землю
+
+ // расположим нашего «пёсика» по высоте следующей формулой:
+ dog.y = -dog.h + gr1.y + gr1.h /2.7;
+ // тут все просто: нижнюю точку объекта (ноги) устанавливаем в позицию
+ // объекта земли, и сдвигаем еще ниже, на расстояние равное 2.7 части от всей высоты объекта земли
+
+ // ну и отрисуем его
+ dog.draw();
+
+ // и начинаем двигать!
+ moveBackGround(10);
+
+});
+
+ // запуск игрового цикла
+game.startLoop('dog_game');
+
+</script>   
+</body>
+</html>
+
